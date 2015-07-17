@@ -1,0 +1,14 @@
+{{extend 'layout.html'}}
+<br><br><br><br>
+{{=message}}
+
+{{if user != None:}}
+<br><br>
+User ID:  {{=user.id}}
+<br>
+First Name: {{=user.first_name}}
+<br>
+Last Name:  {{=user.last_name}}
+<br>
+Email:  {{=user.email}}
+{{pass}}

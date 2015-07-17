@@ -3,6 +3,7 @@
 This is an example SAML SP service for web2py using [pysaml2](https://github.com/rohe/pysaml2).
 
 ## Installing pysaml2 environment 
+
 (in case you have pysaml2 installed you can skip this step):
 
 ### Creating our python virtual env:
@@ -83,32 +84,33 @@ $ py.test
 # Test web2py SP:
 
 
-1.  If you do not have a public IP, or your ports open in you router, a easy way to test your local SP web2py with a extern IDP is to create a tunnel. A easy way is to use ngrok:
-    
-    ```
-    # apt-get install ngrok
-    $ ngrok 8000
-    ```
-    ![img](./ngrok.png "A screenshot of ngrok")
-    
-    In my case I got http://2cf3577a.ngrok.com. I can use this URL to access from Internet intead of localhost.
+1. If you do not have a public IP, or your ports open in you router, a easy way to test your local SP web2py with a extern IDP is to create a tunnel. A easy way is to use ngrok:
 
-    
+```
+# apt-get install ngrok
+$ ngrok 8000
+```
+
+In my case I got http://2cf3577a.ngrok.com. I can use this URL to access from Internet intead of localhost. See the screenshot:
+
+![img](./ngrok.png "A screenshot of ngrok")
+
+
 2. Install and start our APP:
 
-        ```
-        $wget http://www.web2py.com/examples/static/web2py_src.zip
-        $unzip web2py_src.zip
-        $cd ./web2py/applications
-        $git clone https://github.com/josedesoto/web2py-sp-example.git sp #Create the folder sp
-        $python ./web2py/web2py.py -p 8000 --password=temporal
-        ```
+```
+$wget http://www.web2py.com/examples/static/web2py_src.zip
+$unzip web2py_src.zip
+$cd ./web2py/applications
+$git clone https://github.com/josedesoto/web2py-sp-example.git sp #Create the folder sp
+$python ./web2py/web2py.py -p 8000 --password=temporal
+```
 
-3. Before to continue and create the sp.xml file for our SP metadata. We need to modify some configuration in **private/sp_conf.py**. If you take a look, be sure the ngrok URLs are the ones you got in the step 1. 
-        
-3. Verify you can access to the SP metadata: http://NGROK_ID.ngrok.com/sp/default/metadata this function will create you sp.xml file into the private folder. In this step we have our SP app example ready. Go to your URL, my case: **http://2cf3577a.ngrok.com/sp/** and to login...
+3. Before to continue and create the sp.xml file for our SP metadata. We need to modify some configuration in **private/sp_conf.py**. If you take a look, be sure the ngrok URLs are the ones you got in the step 1.
 
-3. Now you have been redirected to the IDP (Identity Provider) the one who will perform the authentication. This is example case, so all the users we introduce here will be validate and bind the POST request to our SP (web2py). Before to continue we need to give to the IDP the information about our SP:
+4. Verify you can access to the SP metadata: http://NGROK_ID.ngrok.com/sp/default/metadata this function will create you sp.xml file into the private folder. In this step we have our SP app example ready. Go to your URL, my case: **http://2cf3577a.ngrok.com/sp/** and to login...
+
+5. Now you have been redirected to the IDP (Identity Provider) the one who will perform the authentication. This is example case, so all the users we introduce here will be validate and bind the POST request to our SP (web2py). Before to continue we need to give to the IDP the information about our SP:
 
 **Issuer:** "urn:example:idp"
 
@@ -128,15 +130,16 @@ The issuer is the entityID of the IDP, to know this info you can take a look her
 ## In this step I get the next error:
 
 ```
- File "/home/jose/Documents/DESARROLLO/web2py-sp/web2py/gluon/contrib/login_methods/saml2_auth.py", line 113, in login_url
-    attributes = d['response'].assertion.attribute_statement[0].attribute
+ File "/home/jose/Documents/DESARROLLO/web2py-sp/web2py/gluon/contrib/login_methods/saml2_auth.py", line 113, in login_url attributes = d['response'].assertion.attribute_statement[0].attribute
 AttributeError: 'dict' object has no attribute 'assertion'
 ```
 
 In order to fix it find the web2py saml login lib: **./gloun/contrib/login_methods/saml2_auth.py**:
 
 1. Add on the top: ```from saml2 import BINDING_HTTP_POST```
+
 2. line 62: replace: bindings = [BINDING_HTTP_REDIRECT] to ```bindings = [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]```
+
 3. line 74 (after else) add: ```binding = BINDING_HTTP_POST``` 
 
 Remove the *saml2_auth.pyc* and stop/start web2py again. If everything works well you should get the new user in your web2py environment (if the user does not exist web2py will create it.), see the screenshot:

@@ -80,8 +80,44 @@ $ pip install pytest
 $ py.test
 ```
 
+# Test web2py SP with PYSAML2 example IDP:
 
-# Test web2py SP:
+1. Install and start our SP APP:
+
+```
+$wget http://www.web2py.com/examples/static/web2py_src.zip
+$unzip web2py_src.zip
+$cd ./web2py/applications
+$git clone https://github.com/josedesoto/web2py-sp-example.git sp #Create the folder sp
+$python ./web2py/web2py.py -p 8000 --password=temporal
+```
+
+2. Before to continue and create the sp.xml file for our SP metadata. We need to modify some configuration in **private/sp_conf.py** with the configuration we have **private/IDP/idp_conf.py** by dafault the IDP is listening: **http://localhost:8088** if you modify any configuration stop and start again web2py.
+
+3. Verify you can access to the SP metadata: http://localhost:8000/sp/default/metadata this function will create you sp.xml file into the private folder. In this step we have our SP app example ready. 
+
+4. Verify you SP mapping in **models/db.py**, for this case:
+
+
+```
+config_file = os.path.join(request.folder,'private','sp_conf'), maps=dict(
+    email=lambda v: v['urn:oid:0.9.2342.19200300.100.1.1'][0],
+    first_name = lambda v: v['urn:oid:2.5.4.42'][0],
+    last_name = lambda v: v['urn:oid:2.16.840.1.113730.3.1.241'][0]))
+```
+
+
+5. Start the PYSAML2 IDP:
+
+```
+cd ./private/IDP/
+python idp.py ipd_conf
+```
+
+6. Go to your SP URL: **http://localhost:8000/sp/** and login... and type as user: testuser@test.com and password: temporal If everything is working web2py will redirect to the IDP and once you type the correct credentials you will be able to login into the SP.
+
+
+# Test web2py SP with Okta IDP:
 
 
 1. If you do not have a public IP, or your ports open in you router, a easy way to test your local SP web2py with a extern IDP is to create a tunnel. A easy way is to use ngrok:
@@ -140,7 +176,16 @@ In order to fix it find the web2py saml login lib: **./gloun/contrib/login_metho
 
 2. line 62: replace: bindings = [BINDING_HTTP_REDIRECT] to ```bindings = [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]```
 
-3. line 74 (after else) add: ```binding = BINDING_HTTP_POST``` 
+3. before ```if not request.vars.SAMLResponse```  add:
+
+```
+if request.env.request_method == 'GET':
+    binding = BINDING_HTTP_REDIRECT 
+elif request.env.request_method == 'POST':
+    binding = BINDING_HTTP_POST
+```
+<!--  -->
+With the changes before saml2_auth.py will work for a GET and a POST response.
 
 Remove the *saml2_auth.pyc* and stop/start web2py again. If everything works well you should get the new user in your web2py environment (if the user does not exist web2py will create it.), see the screenshot:
 
